@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime
 import matplotlib.pyplot as plt
+import plotly.express as px
 
 st.set_page_config(layout="wide")
 st.title("NOVA SGMTitanStats")
@@ -176,27 +177,29 @@ else:
             df_f["RR MAX"] = pd.to_numeric(df_f["RR MAX"], errors="coerce")
             df_f = df_f.dropna(subset=["RR MAX"])
 
-            # Prendiamo la soglia RR minima definita per il formatore
+            # Ottieni la soglia di stop
             rr_configurati = user_rr.get(formatore, formatore_rr[formatore])
             if not rr_configurati:
                 st.warning(f"Nessuna RR configurata per {formatore}.")
                 continue
 
             soglia_stop = min(rr_configurati)
-
-            # Costruzione colonna visiva
             df_f["RR_DISPLAY"] = df_f["RR MAX"].apply(lambda x: -1 if x < soglia_stop else x)
 
-            # Se ci sono ancora dati, plottiamo
             if not df_f["RR_DISPLAY"].empty:
-                fig, ax = plt.subplots(figsize=(8, 4))
-                ax.hist(df_f["RR_DISPLAY"], bins=20, color='orange', edgecolor='black')
-                ax.set_title(f"Distribuzione RR MAX - {formatore}")
-                ax.set_xlabel("RR MAX (Stop = -1)")
-                ax.set_ylabel("Frequenza")
-                st.pyplot(fig)
+                fig = px.histogram(
+                    df_f,
+                    x="RR_DISPLAY",
+                    nbins=20,
+                    title=f"Distribuzione RR MAX - {formatore}",
+                    labels={"RR_DISPLAY": "RR MAX (Stop = -1)", "count": "Frequenza"},
+                    color_discrete_sequence=["orange"]
+                )
+                fig.update_layout(bargap=0.1)
+                st.plotly_chart(fig, use_container_width=True)
             else:
                 st.warning(f"Nessun RR MAX valido per {formatore}.")
+
 
 
 
