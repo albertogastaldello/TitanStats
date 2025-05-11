@@ -52,12 +52,12 @@ for formatore in selected_formatori:
     st.sidebar.markdown(f"**{formatore}**")
 
     rr_input=st.sidebar.text_input(
-        f"RR per {formatore} (es. 1:1, 1:1.5, 1:2,...)",
+        f"RR per {formatore} (ad es. 1:1 e 1:2, scrivere 1,2)",
         value=",".join(map(str, formatore_rr[formatore])),
         key=f"rr_{formatore}"
     )
     parziali_input=st.sidebar.text_input(
-        f"Parziali per {formatore} (es 0.3, 0.3, 0.4)",
+        f"Parziali per {formatore} (es 0.3,0.3,0.4. La somma deve fare 1!)",
         value=",".join(map(str, formatore_parziali[formatore])),
         key=f"parziali_{formatore}"
     )
@@ -128,3 +128,38 @@ else:
         ax.set_ylabel("Balance")
         ax.grid(True)
         st.pyplot(fig)
+
+        # Statistiche finali generali
+        max_balance = max(balance_array)
+        min_balance = min(balance_array)
+        final_balance = balance_array[-1]
+
+        col1, col2, col3 = st.columns(3)
+        col1.metric("💰 Balance Finale", f"{final_balance:,.2f}")
+        col2.metric("📈 Balance Massimo", f"{max_balance:,.2f}")
+        col3.metric("📉 Balance Minimo", f"{min_balance:,.2f}")
+
+
+        st.subheader("📊 Riepilogo per Formatore")
+
+        summary_data = []
+
+        for formatore in selected_formatori:
+            df_f = df_filtered[df_filtered["FORMATORE"] == formatore]
+            num_operazioni = len(df_f)
+            rischio = user_risk[formatore]
+            rr = user_rr.get(formatore, formatore_rr[formatore])
+            parz = user_parziali.get(formatore, formatore_parziali[formatore])
+
+            summary_data.append({
+                "Formatore": formatore,
+                "Operazioni": num_operazioni,
+                "Rischio (%)": rischio,
+                "RR": ", ".join(map(str, rr)),
+                "Parziali": ", ".join(map(str, parz))
+            })
+
+        summary_df = pd.DataFrame(summary_data)
+        st.dataframe(summary_df)
+
+
