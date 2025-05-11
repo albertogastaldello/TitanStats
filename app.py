@@ -44,6 +44,38 @@ for formatore in selected_formatori:
     )
     user_risk[formatore]=rischio
 
+st.sidebar.markdown("### RR e parziali per formatore")
+user_rr={}
+user_parziali={}
+
+for formatore in selected_formatori:
+    st.sidebar.markdown(f"**{formatore}**")
+
+    rr_input=st.sidebar.text_input(
+        f"RR per {formatore} (es. 1:1, 1:1.5, 1:2,...)",
+        value=",".join(map(str, formatore_rr[formatore])),
+        key=f"rr_{formatore}"
+    )
+    parziali_input=st.sidebar.text_input(
+        f"Parziali per {formatore} (es 0.3, 0.3, 0.4)",
+        value=",".join(map(str, formatore_parziali[formatore])),
+        key=f"parziali_{formatore}"
+    )
+
+    try:
+        rr_list = [float(x.strip()) for x in rr_input.split(",")]
+        parziali_list = [float(x.strip()) for x in parziali_input.split(",")]
+
+        if len(rr_list) != len(parziali_list):
+            st.sidebar.warning(f"{formatore}: RR e Parziali devono avere la stessa lunghezza.")
+        elif not abs(sum(parziali_list) - 1.0) < 0.01:
+            st.sidebar.warning(f"{formatore}: La somma dei parziali deve essere 1.0.")
+        else:
+            user_rr[formatore] = rr_list
+            user_parziali[formatore] = parziali_list
+    except Exception:
+        st.sidebar.warning(f"{formatore}: Formato non valido.")
+
 start_date = st.date_input("Data Inizio", df["GIORNO"].min())
 end_date = st.date_input("Data Fine", df["GIORNO"].max())
 
@@ -70,8 +102,8 @@ else:
             curr_rr_max = curr['RR MAX']
             formatore = curr['FORMATORE']
             risk = user_risk[formatore]
-            rr_list = formatore_rr[formatore]
-            parziali = formatore_parziali[formatore]
+            rr_list = user_rr.get(formatore, formatore_rr[formatore])
+            parziali = user_parziali.get(formatore, formatore_parziali[formatore])
 
             pnl = 0
             open_percent = 1
