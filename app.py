@@ -4,7 +4,7 @@ from datetime import datetime
 import matplotlib.pyplot as plt
 
 st.set_page_config(layout="wide")
-st.title("Andamento del Balance per Formatore")
+st.title("NOVA SGMTitanStats")
 
 # Parametri iniziali
 formatori = ['NATE', 'REY', 'DAVID']
@@ -31,6 +31,19 @@ selected_formatori = st.sidebar.multiselect(
     default=formatori  # Tutti selezionati di default
 )
 
+st.sidebar.markdown("### Rischio per formatore (%)")
+user_risk={}
+for formatore in selected_formatori:
+    rischio = st.sidebar.number_input(
+        f"Rischio per {formatore}",
+        min_value = 0.0,
+        max_value = 5.0,
+        value = float(formatore_risk[formatore]),
+        step=0.5,
+        key=f"rischio_{formatore}"
+    )
+    user_risk[formatore]=rischio
+
 start_date = st.date_input("Data Inizio", df["GIORNO"].min())
 end_date = st.date_input("Data Fine", df["GIORNO"].max())
 
@@ -56,7 +69,7 @@ else:
             curr = df_filtered.loc[i]
             curr_rr_max = curr['RR MAX']
             formatore = curr['FORMATORE']
-            risk = formatore_risk[formatore]
+            risk = user_risk[formatore]
             rr_list = formatore_rr[formatore]
             parziali = formatore_parziali[formatore]
 
