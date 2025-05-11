@@ -24,15 +24,25 @@ df = pd.concat(statistiche)
 df = df.sort_values(by='DATA_ORA').reset_index(drop=True)
 
 # Interfaccia Streamlit
+st.sidebar.header("Filtri")
+selected_formatori = st.sidebar.multiselect(
+    "Seleziona i formatori",
+    options=formatori,
+    default=formatori  # Tutti selezionati di default
+)
+
 start_date = st.date_input("Data Inizio", df["GIORNO"].min())
 end_date = st.date_input("Data Fine", df["GIORNO"].max())
 
-if start_date > end_date:
+if not selected_formatori:
+    st.warning("Seleziona almeno un formatore per visualizzare i dati.")
+elif start_date > end_date:
     st.error("La data di inizio non può essere dopo quella di fine.")
 else:
     # Filtro
-    mask = (df['GIORNO'] >= pd.to_datetime(start_date)) & (df['GIORNO'] <= pd.to_datetime(end_date))
-    df_filtered = df.loc[mask].reset_index(drop=True)
+    df_filtered = df[df["FORMATORE"].isin(selected_formatori)]
+    mask = (df_filtered['GIORNO'] >= pd.to_datetime(start_date)) & (df_filtered['GIORNO'] <= pd.to_datetime(end_date))
+    df_filtered = df_filtered.loc[mask].reset_index(drop=True)
 
     if df_filtered.empty:
         st.warning("Nessun dato disponibile per l'intervallo selezionato.")
