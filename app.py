@@ -168,19 +168,35 @@ else:
         for formatore in selected_formatori:
             df_f = df_filtered[df_filtered["FORMATORE"] == formatore].copy()
 
-            # Otteniamo soglia di stop dal primo livello RR configurato
-            soglia_stop = min(user_rr.get(formatore, formatore_rr[formatore]))
+            if df_f.empty or "RR MAX" not in df_f.columns:
+                st.warning(f"Nessun dato per il formatore {formatore}.")
+                continue
 
-            # Applichiamo la logica di stop
+            # Assicuriamoci che i valori siano numerici e senza NaN
+            df_f["RR MAX"] = pd.to_numeric(df_f["RR MAX"], errors="coerce")
+            df_f = df_f.dropna(subset=["RR MAX"])
+
+            # Prendiamo la soglia RR minima definita per il formatore
+            rr_configurati = user_rr.get(formatore, formatore_rr[formatore])
+            if not rr_configurati:
+                st.warning(f"Nessuna RR configurata per {formatore}.")
+                continue
+
+            soglia_stop = min(rr_configurati)
+
+            # Costruzione colonna visiva
             df_f["RR_DISPLAY"] = df_f["RR MAX"].apply(lambda x: -1 if x < soglia_stop else x)
 
-            # Istogramma
-            fig, ax = plt.subplots(figsize=(8, 4))
-            ax.hist(df_f["RR_DISPLAY"], bins=20, color='orange', edgecolor='black')
-            ax.set_title(f"Distribuzione RR MAX - {formatore}")
-            ax.set_xlabel("RR MAX (Stop = -1)")
-            ax.set_ylabel("Frequenza")
-            st.pyplot(fig)
+            # Se ci sono ancora dati, plottiamo
+            if not df_f["RR_DISPLAY"].empty:
+                fig, ax = plt.subplots(figsize=(8, 4))
+                ax.hist(df_f["RR_DISPLAY"], bins=20, color='orange', edgecolor='black')
+                ax.set_title(f"Distribuzione RR MAX - {formatore}")
+                ax.set_xlabel("RR MAX (Stop = -1)")
+                ax.set_ylabel("Frequenza")
+                st.pyplot(fig)
+            else:
+                st.warning(f"Nessun RR MAX valido per {formatore}.")
 
 
 
