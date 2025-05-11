@@ -3,6 +3,7 @@ import pandas as pd
 from datetime import datetime
 import matplotlib.pyplot as plt
 import plotly.express as px
+import plotly.graph_objects as go
 
 st.set_page_config(layout="wide")
 st.title("NOVA SGMTitanStats")
@@ -186,19 +187,33 @@ else:
             soglia_stop = min(rr_configurati)
             df_f["RR_DISPLAY"] = df_f["RR MAX"].apply(lambda x: -1 if x < soglia_stop else x)
 
-            if not df_f["RR_DISPLAY"].empty:
-                fig = px.histogram(
-                    df_f,
-                    x="RR_DISPLAY",
-                    nbins=20,
-                    title=f"Distribuzione RR MAX - {formatore}",
-                    labels={"RR_DISPLAY": "RR MAX (Stop = -1)", "count": "Frequenza"},
-                    color_discrete_sequence=["orange"]
+            # Calcolo distribuzione
+            counts = df_f["RR_DISPLAY"].value_counts().sort_index()
+            x_vals = sorted(counts.index.tolist())
+            y_vals = counts.values.tolist()
+
+            # Colori condizionali: rosso per -1 (stop), blu per gli altri
+            bar_colors = ['red' if x == -1 else 'blue' for x in x_vals]
+
+            # Crea istogramma personalizzato
+            fig = go.Figure(data=[
+                go.Bar(
+                    x=x_vals,
+                    y=y_vals,
+                    marker_color=bar_colors,
+                    hovertemplate="<b>RR:</b> %{x}<br><b>Operazioni:</b> %{y}<extra></extra>"
                 )
-                fig.update_layout(bargap=0.1)
-                st.plotly_chart(fig, use_container_width=True)
-            else:
-                st.warning(f"Nessun RR MAX valido per {formatore}.")
+            ])
+
+            fig.update_layout(
+                title=f"Distribuzione RR MAX - {formatore}",
+                xaxis_title="RR MAX (Stop = -1)",
+                yaxis_title="Frequenza",
+                bargap=0.1
+            )
+
+            st.plotly_chart(fig, use_container_width=True)
+
 
 
 
