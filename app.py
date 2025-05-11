@@ -163,3 +163,24 @@ else:
         st.dataframe(summary_df)
 
 
+        st.subheader("📉 Distribuzione RR MAX per Formatore")
+
+        for formatore in selected_formatori:
+            df_f = df_filtered[df_filtered["FORMATORE"] == formatore].copy()
+
+            # Otteniamo soglia di stop dal primo livello RR configurato
+            soglia_stop = min(user_rr.get(formatore, formatore_rr[formatore]))
+
+            # Applichiamo la logica di stop
+            df_f["RR_DISPLAY"] = df_f["RR MAX"].apply(lambda x: -1 if x < soglia_stop else x)
+
+            # Istogramma
+            fig, ax = plt.subplots(figsize=(8, 4))
+            ax.hist(df_f["RR_DISPLAY"], bins=20, color='orange', edgecolor='black')
+            ax.set_title(f"Distribuzione RR MAX - {formatore}")
+            ax.set_xlabel("RR MAX (Stop = -1)")
+            ax.set_ylabel("Frequenza")
+            st.pyplot(fig)
+
+
+
